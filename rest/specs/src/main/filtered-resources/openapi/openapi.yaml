@@ -1,0 +1,217 @@
+#
+# Copyright (c) 2019 Connexta, LLC
+#
+# Released under the GNU Lesser General Public License version 3; see
+# https://www.gnu.org/licenses/lgpl-3.0.html
+#
+
+openapi: 3.0.2
+
+info:
+  version: ${project.version}
+  title: Index API
+  description: >
+    The Index API is defined to provide clients with the ability to index products.
+  contact:
+    name: Connexta
+  license:
+    name: GNU Lesser General Public License
+    url: 'http://www.gnu.org/licenses/lgpl.html'
+
+servers:
+  - url: ${rest.server.url}
+
+paths:
+  /product/{productId}/cst:
+    put:
+      summary: Index Endpoint for products.
+      description: >
+        A system can use the Index Endpoint to index a product.
+      operationId: index
+      tags:
+        - index
+      parameters:
+        - $ref: '#/components/parameters/Accept-Version'
+        - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        description: >
+          The body of the request that includes one attached file that is used to index the product.
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  description: >
+                    The actual file attachment that that is used to index the product. The current maximum size is the character equivalent of 10GB.
+                  type: string
+                  format: binary
+                  minLength: 1
+                  maxLength: 14316557655
+              required:
+                - file
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '501':
+          $ref: '#/components/responses/NotImplemented'
+        'default':
+          $ref: '#/components/responses/DefaultError'
+
+components:
+  responses:
+    Ok:
+      description: >
+        The index request was successful.
+      headers:
+        'Content-Version':
+          $ref: '#/components/headers/ContentVersion'
+    Unauthorized:
+      description: >
+        The client could not be authenticated.
+      headers:
+        'Content-Version':
+          $ref: '#/components/headers/ContentVersion'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+    Forbidden:
+      description: >
+        The client does not have permission.
+      headers:
+        'Content-Version':
+          $ref: '#/components/headers/ContentVersion'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+    NotImplemented:
+      description: >
+        The requested API version is not supported and therefore not implemented.
+      headers:
+        'Content-Version':
+          $ref: '#/components/headers/ContentVersion'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+    BadRequest:
+      description: >
+        The client message could not understood by the server due to invalid format or syntax.
+      headers:
+        'Content-Version':
+          $ref: '#/components/headers/ContentVersion'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+    DefaultError:
+      description: >
+        Any other possible errors not currently known.
+      headers:
+        'Content-Version':
+          $ref: '#/components/headers/ContentVersion'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+
+  parameters:
+    Accept-Version:
+      name: Accept-Version
+      in: header
+      description: >
+        The minimal API version from which a client using this API will accept responses.
+      required: true
+      schema:
+        $ref: '#/components/schemas/Version'
+    ProductId:
+      name: productId
+      in: path
+      description: >
+        The ID of the product to index using the attached file.
+      required: true
+      schema:
+        type: string
+        minLength: 32
+        maxLength: 32
+        pattern: '^[0-9a-zA-Z]+$'
+        example: 00067360b70e4acfab561fe593ad3f7a
+
+  headers:
+    ContentVersion:
+      description: >
+        The API version used by the server to produce the REST message. The server will accept
+        messages for any minor versions prior to this one.
+      required: true
+      schema:
+        $ref: '#/components/schemas/Version'
+      examples:
+        major.minor:
+          value: '1.2'
+          summary: A released minor version
+        major.minor.patch:
+          value: '1.0.3'
+          summary: A patched version
+        dev:
+          value: '1.2.0-SNAPSHOT'
+          summary: A development version
+
+  schemas:
+    Version:
+      description: Version number.
+      type: string
+      minLength: 3
+      maxLength: 80
+      pattern: '^([1-9]([0-9]+)?)\.(0|([1-9]([0-9]+)?))(\.(0|([1-9]([0-9]+)?))(-.*)?)?$'
+      example: 1.2, 2.4.3, 0.2.5-SNAPSHOT
+    ErrorMessage:
+      description: Error message information.
+      type: object
+      required:
+        - timestamp
+        - path
+        - status
+        - error
+        - message
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: The server time when the error was generated.
+          example: 2019-05-09T14:47:13.101+0000
+        path:
+          type: string
+          description: The path for the REST request that generated this error.
+          example: /store/product/00067360b70e4acfab561fe593ad3f7a/cst
+        status:
+          type: integer
+          format: int32
+          description: The corresponding HTTP status code.
+          example: 200
+        code:
+          type: integer
+          format: int32
+          description: >
+            An optional more specific code corresponding to the error (specific codes need to be documented).
+        error:
+          type: string
+          description: The corresponding HTTP reason phrase.
+          minLength: 1
+          example: Bad Request
+        message:
+          type: string
+          description: Specific information about the error.
+          minLength: 1
+          example: Validation failed for object='systemInfo'.
+        details:
+          type: array
+          items:
+            type: string
+          description: Optional detailed information about the error.
