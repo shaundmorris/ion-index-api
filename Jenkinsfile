@@ -79,7 +79,7 @@ pipeline {
             parallel {
                 stage ('Linux') {
                     steps {
-                        withMaven(maven: 'Maven 3.5.4', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'cx-internal', mavenOpts: '${LINUX_MVN_RANDOM}') {
+                        withMaven(maven: 'Maven 3.5.4', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'ion-maven-settings', mavenOpts: '${LINUX_MVN_RANDOM}') {
                             script {
                                 if (params.RELEASE == true) {
                                     sh "mvn -B -Dtag=${env.RELEASE_TAG} -DreleaseVersion=${env.RELEASE_VERSION} -DdevelopmentVersion=${env.NEXT_VERSION} release:prepare"
@@ -110,7 +110,7 @@ pipeline {
                                 sh "git checkout ${env.RELEASE_TAG}"
                             }
                         }
-                        withMaven(maven: 'M35', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'cx-internal', mavenOpts: '${LINUX_MVN_RANDOM}') {
+                        withMaven(maven: 'M35', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'ion-maven-settings', mavenOpts: '${LINUX_MVN_RANDOM}') {
                             withCredentials([string(credentialsId: 'SonarQubeGithubToken', variable: 'SONARQUBE_GITHUB_TOKEN'), string(credentialsId: 'cxbot-sonarcloud', variable: 'SONAR_TOKEN')]) {
                                 script {
                                     sh 'mvn -q -B -Dcheckstyle.skip=true org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN  -Dsonar.organization=cx -Dsonar.projectKey=${GITHUB_REPONAME} -Dsonar.exclusions=${COVERAGE_EXCLUSIONS} $DISABLE_DOWNLOAD_PROGRESS_OPTS'
@@ -162,7 +162,7 @@ pipeline {
                     }
                 }
 
-                withMaven(maven: 'Maven 3.5.4', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'cx-internal', mavenOpts: '${LINUX_MVN_RANDOM}') {
+                withMaven(maven: 'Maven 3.5.4', jdk: 'jdk11', globalMavenSettingsConfig: 'default-global-settings', mavenSettingsConfig: 'ion-maven-settings', mavenOpts: '${LINUX_MVN_RANDOM}') {
                     sh 'mvn javadoc:aggregate -B -DskipStatic=true -DskipTests=true -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
                     sh 'mvn deploy -B -DskipStatic=true -DskipTests=true -DretryFailedDeploymentCount=10 -nsu $DISABLE_DOWNLOAD_PROGRESS_OPTS'
                 }
